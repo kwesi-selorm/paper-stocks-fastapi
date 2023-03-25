@@ -42,7 +42,6 @@ def verify_access_token(authorization: Annotated[str | None, Header()]) -> None:
         )
     try:
         payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
-        print(payload)
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
