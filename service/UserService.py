@@ -25,7 +25,6 @@ class UserService:
         return document
 
     @staticmethod
-    def save_user(user: User):
-        # Check if the user already exists, update if it does and save new if it does now
-        result = users_collection.insert_one(user)
+    def save(user: User):
+        result = users_collection.insert_one(user.dict())
         return result.inserted_id
