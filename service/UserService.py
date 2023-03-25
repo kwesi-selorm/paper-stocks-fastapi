@@ -3,7 +3,7 @@ from typing import Any, Mapping
 from bson import ObjectId
 
 from config.database_config import db
-from model.User import User
+from model.UserModel import User
 
 users_collection = db['users']
 
