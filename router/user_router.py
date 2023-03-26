@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends, Body, status
 
 from auth.jwt_fns import create_access_token, verify_access_token
+from helper.symbol_helper import verify_symbol
 from model.AssetModel import BuyAssetInput, Asset
 from model.UserModel import SignInUser, SignUpUser, User
 from service.AssetService import AssetService
@@ -116,6 +117,8 @@ async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body
 
     if not user_doc:
         raise HTTPException(status_code=404, detail={"message": f"User with id '{user_id}' found"})
+
+    verify_symbol(symbol)
 
     already_owned_asset = asset_service.find_by_user_id_and_symbol(user_id, symbol)
 
