@@ -3,10 +3,10 @@ from typing import Any, Mapping
 from bson import ObjectId
 from pymongo import ReturnDocument
 
-from config.database_config import db
+from config.DatabaseConfig import DatabaseConfig
 from model.AssetModel import Asset
 
-assets_collection = db['assets']
+assets_collection = DatabaseConfig().get_collection("assets")
 
 
 class AssetService:

@@ -1,8 +1,18 @@
-from pprint import pprint
-
 from pymongo import MongoClient
 
 from helper.secrets_helper import secrets
+
+
+class DatabaseConfig:
+    @staticmethod
+    def get_collection(collection_name):
+        try:
+            mongo_client = MongoClient(secrets.get('MONGODB_URL_DEV'))
+            database = mongo_client["fastapi"]
+            return database[collection_name]
+        except ConnectionError as e:
+            print('Failed to connect to MongoDB', str(e))
+            return None
 
 
 def connect_to_database():

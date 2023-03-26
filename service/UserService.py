@@ -2,10 +2,10 @@ from typing import Any, Mapping
 
 from bson import ObjectId
 
-from config.database_config import db
+from config.DatabaseConfig import DatabaseConfig
 from model.UserModel import User
 
-users_collection = db['users']
+users_collection = DatabaseConfig().get_collection("users")
 
 
 class UserService:
