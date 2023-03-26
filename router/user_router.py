@@ -1,16 +1,19 @@
 import json
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Depends, Body, status
 
 from auth.jwt_fns import create_access_token, verify_access_token
+from model.AssetModel import BuyAssetInput, Asset
 from model.UserModel import SignInUser, SignUpUser, User
+from service.AssetService import AssetService
 from service.UserService import UserService
 from bson import json_util
 from helper.password_helper import verify_password, hash_password
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 user_service = UserService()
+asset_service = AssetService()
 
 
 class ReturnedUser:
@@ -24,6 +27,12 @@ class ReturnedUserWithToken(ReturnedUser):
     def __init__(self, _id: str, username: str, buying_power: int, token: str):
         super().__init__(_id, username, buying_power)
         self.token = token
+
+
+class ReturnedAsset:
+    def __init__(self, symbol: str, position: int):
+        self.symbol = symbol
+        self.position = position
 
 
 @router.post("/signin")
@@ -96,3 +105,42 @@ async def get_user(user_id: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail={"message": str(e)})
+
+
+@router.post("/buy-asset/{user_id}", dependencies=[Depends(verify_access_token)], status_code=status.HTTP_201_CREATED)
+async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body(required=True)]):
+    symbol = buy_asset_input.dict().get("symbol")
+    name = buy_asset_input.dict().get("name")
+    new_position = buy_asset_input.dict().get("position")
+    new_amount_invested = buy_asset_input.dict().get("amountInvested")
+
+    user_doc = user_service.find_by_id(user_id)
+
+    if not user_doc:
+        raise HTTPException(status_code=404, detail={"message": f"User with id '{user_id}' found"})
+
+    already_owned_asset = asset_service.find_by_user_id_and_symbol(user_id, symbol)
+
+    if already_owned_asset is None:
+        asset_dict = {"symbol": symbol, "name": name, "position": new_position, "amountInvested": new_amount_invested,
+                      "averagePrice": new_amount_invested / new_position, "userId": user_id}
+        new_asset = Asset(**asset_dict)
+        print(new_asset)
+        try:
+            asset_service.save_new(new_asset)
+            return new_asset
+        except Exception as e:
+            raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})
+
+    else:
+        asset_id = already_owned_asset.get("_id")
+        old_position = already_owned_asset.get("position")
+        old_amount_invested = already_owned_asset.get("amountInvested")
+        update = asset_service.find_position_and_average_on_buy(
+            old_position, old_amount_invested, new_position, new_amount_invested)
+
+        try:
+            updated_asset = asset_service.update_on_buy(asset_id, update)
+            return ReturnedAsset(symbol=updated_asset.get("symbol"), position=updated_asset.get("position"))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})

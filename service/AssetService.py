@@ -1,6 +1,7 @@
 from typing import Any, Mapping
 
 from bson import ObjectId
+from pymongo import ReturnDocument
 
 from config.database_config import db
 from model.AssetModel import Asset
@@ -9,19 +10,31 @@ assets_collection = db['assets']
 
 
 class AssetService:
-    def __init__(self, symbol: str, name: str, position: int, amount_invested: float, average_price: float,
-                 user_id: str):
+    def __init__(self, symbol: str | None = None, name: str | None = None, position: int | None = None,
+                 amount_invested: float | None = None,
+                 average_price: float | None = None,
+                 user_id: str = None):
         self.symbol = symbol
         self.name = name
         self.position = position
         self.amount_invested = amount_invested
         self.average_price = average_price
         self.user_id = user_id
-        pass
+
+    @staticmethod
+    def save_new(asset: Asset):
+        assets_collection.insert_one(asset.dict())
+
+    @staticmethod
+    def update_on_buy(asset_id: str, update: dict[str, Any]):
+        return assets_collection.find_one_and_update(
+            {"_id": ObjectId(asset_id)},
+            {"$set": update},
+            return_document=ReturnDocument.AFTER)
 
     @staticmethod
     def find_by_user_id_and_symbol(user_id: str, symbol: str):
-        return assets_collection.find_one({'user_id': user_id, 'symbol': symbol})
+        return assets_collection.find_one({'userId': user_id, 'symbol': symbol})
 
     @staticmethod
     def find_position_and_average_on_buy(old_position: int, old_amount_invested: float, new_position: int,
@@ -29,7 +42,7 @@ class AssetService:
         total_position = old_position + new_position
         total_amount_invested = old_amount_invested + new_amount_invested
         average_price = total_amount_invested / total_position
-        return {total_position, average_price}
+        return {"position": total_position, "averagePrice": average_price}
 
     @staticmethod
     def find_position_and_average_on_sell(old_position: int, old_average_price: float, positions_sold: int,
