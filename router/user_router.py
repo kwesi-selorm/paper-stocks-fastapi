@@ -119,16 +119,17 @@ async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body
         raise HTTPException(status_code=404, detail={"message": f"User with id '{user_id}' found"})
 
     verify_symbol(symbol)
-
+    remaining_buying_power = user_doc.get("buyingPower") - new_amount_invested
     already_owned_asset = asset_service.find_by_user_id_and_symbol(user_id, symbol)
 
     if already_owned_asset is None:
         asset_dict = {"symbol": symbol, "name": name, "position": new_position, "amountInvested": new_amount_invested,
                       "averagePrice": new_amount_invested / new_position, "userId": user_id}
         new_asset = Asset(**asset_dict)
-        print(new_asset)
+
         try:
             asset_service.save_new(new_asset)
+            user_service.update_on_buy(user_id, {"buyingPower": remaining_buying_power})
             return new_asset
         except Exception as e:
             raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})
@@ -142,6 +143,7 @@ async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body
 
         try:
             updated_asset = asset_service.update_on_buy(asset_id, update)
+            user_service.update_on_buy(user_id, {"buyingPower": remaining_buying_power})
             return ReturnedAsset(symbol=updated_asset.get("symbol"), position=updated_asset.get("position"))
         except Exception as e:
             raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})

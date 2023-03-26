@@ -28,3 +28,7 @@ class UserService:
     def save(user: User):
         result = users_collection.insert_one(user.dict())
         return result.inserted_id
+
+    @staticmethod
+    def update_on_buy(user_id: str, update: dict[str, Any]):
+        users_collection.find_one_and_update({"_id": ObjectId(user_id)}, {"$set": update})
