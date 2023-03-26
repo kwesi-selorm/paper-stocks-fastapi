@@ -8,6 +8,4 @@ def hash_password(password: str):
 
 
 def verify_password(plain_password: str, hashed_password: str):
-    print(hashed_password)
     return custom_algo.verify(plain_password, hashed_password)
-

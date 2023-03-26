@@ -1,29 +1,19 @@
+import os
+
+from dotenv import load_dotenv
+from fastapi import HTTPException
 from pymongo import MongoClient
 
-from helper.secrets_helper import secrets
+load_dotenv()
 
 
 class DatabaseConfig:
     @staticmethod
     def get_collection(collection_name):
         try:
-            mongo_client = MongoClient(secrets.get('MONGODB_URL_DEV'))
+            mongo_client = MongoClient(os.environ.get("MONGODB_URL"))
             database = mongo_client["fastapi"]
             return database[collection_name]
         except ConnectionError as e:
             print('Failed to connect to MongoDB', str(e))
-            return None
-
-
-def connect_to_database():
-    try:
-        mongo_client = MongoClient(secrets.get('MONGODB_URL_DEV'))
-        database = mongo_client["fastapi"]
-        print('Connected to MongoDB')
-        return database
-    except ConnectionError as e:
-        print('Failed to connect to MongoDB', e)
-        return None
-
-
-db = connect_to_database()
+            raise HTTPException(status_code=500, detail="Failed to connect to MongoDB")

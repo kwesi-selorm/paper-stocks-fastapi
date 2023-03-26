@@ -1,5 +1,5 @@
 import json
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Body, status
 
@@ -38,11 +38,9 @@ class ReturnedAsset:
 @router.post("/signin")
 async def signin(credentials: Annotated[SignInUser, Body(required=True)]):
     signin_input = credentials.dict()
-    print(signin_input)
     username_input = signin_input.get("username")
     password_input = signin_input.get("password")
     user_doc = user_service.find_by_username(username_input)
-    print(user_doc)
 
     if not user_doc:
         raise HTTPException(status_code=404,

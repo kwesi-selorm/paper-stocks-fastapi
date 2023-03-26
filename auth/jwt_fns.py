@@ -1,14 +1,17 @@
+import os
 from datetime import datetime, timedelta
 from typing import Annotated
 
 from fastapi import HTTPException, status, Header
 import jwt
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
-from helper.secrets_helper import secrets
 from service.UserService import UserService
 
-SECRET = secrets.get("JWT_SECRET_FASTAPI")
+load_dotenv()
+
+SECRET = os.environ.get("JWT_SECRET_FASTAPI")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 24 * 60
 
@@ -25,12 +28,18 @@ class Payload(BaseModel):
 
 
 def create_access_token(username: str) -> str:
-    payload = {
-        "sub": username,
-        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    }
-    encoded_jwt = jwt.encode(payload, SECRET, ALGORITHM)
-    return encoded_jwt
+    try:
+        payload = {
+            "sub": username,
+            "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        }
+        encoded_jwt = jwt.encode(payload, SECRET, ALGORITHM)
+        return encoded_jwt
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"message": "Error generating access token: " + str(e)}
+        )
 
 
 def verify_access_token(authorization: Annotated[str | None, Header()]) -> None:
