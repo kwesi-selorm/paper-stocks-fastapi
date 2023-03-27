@@ -9,10 +9,6 @@ from model.UserModel import User
 users_collection = DatabaseConfig().get_collection("users")
 
 
-def raise_exception(e: Exception) -> HTTPException:
-    return HTTPException(status_code=500, detail={"message": "Error communicating with the database: " + str(e)})
-
-
 class UserService:
     @staticmethod
     def find_by_id(user_id: str):
@@ -37,15 +33,9 @@ class UserService:
 
     @staticmethod
     def save(user: User):
-        try:
-            result = users_collection.insert_one(user.dict())
-            return result.inserted_id
-        except Exception as e:
-            raise raise_exception(e)
+        result = users_collection.insert_one(user.dict())
+        return result.inserted_id
 
     @staticmethod
     def update_on_buy(user_id: str, update: dict[str, Any]):
-        try:
-            users_collection.find_one_and_update({"_id": ObjectId(user_id)}, {"$set": update})
-        except Exception as e:
-            raise raise_exception(e)
+        users_collection.find_one_and_update({"_id": ObjectId(user_id)}, {"$set": update})
