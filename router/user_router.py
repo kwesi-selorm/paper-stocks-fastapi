@@ -39,23 +39,27 @@ async def signin(credentials: Annotated[SignInUser, Body(required=True)]):
     signin_input = credentials.dict()
     username_input = signin_input.get("username")
     password_input = signin_input.get("password")
-    user_doc = user_service.find_by_username(username_input)
 
-    if not user_doc:
-        raise HTTPException(status_code=404,
-                            detail={"message": f"A user with the username '{username_input}' was not found"})
+    try:
+        user_doc = user_service.find_by_username(username_input)
 
-    user_doc_json: dict = json.loads(json_util.dumps(user_doc))
-    password_hash = user_doc_json["passwordHash"]
+        if not user_doc:
+            raise HTTPException(status_code=404,
+                                detail={"message": f"A user with the username '{username_input}' was not found"})
 
-    if not verify_password(password_input, password_hash):
-        raise HTTPException(status_code=401, detail={"message": "Invalid password"})
+        user_doc_json: dict = json.loads(json_util.dumps(user_doc))
+        password_hash = user_doc_json["passwordHash"]
 
-    access_token = create_access_token(username_input)
-    return ReturnedUserWithToken(_id=str(user_doc_json["_id"]["$oid"]),
-                                 username=user_doc_json["username"],
-                                 buying_power=user_doc_json["buyingPower"],
-                                 token=access_token)
+        if not verify_password(password_input, password_hash):
+            raise HTTPException(status_code=401, detail={"message": "Invalid password"})
+
+        access_token = create_access_token(username_input)
+        return ReturnedUserWithToken(_id=str(user_doc_json["_id"]["$oid"]),
+                                     username=user_doc_json["username"],
+                                     buying_power=user_doc_json["buyingPower"],
+                                     token=access_token)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"message": "Something went wrong: " + str(e)})
 
 
 @router.post("/signup")
@@ -65,26 +69,30 @@ async def signup(credentials: Annotated[SignUpUser, Body(required=True)]):
     email_input = signup_input.get("email")
     password_input = signup_input.get("password")
 
-    existing_user_username = user_service.find_by_username(username_input)
-    if existing_user_username:
-        raise HTTPException(status_code=409,
-                            detail={"message": f"A user with username '{username_input}' already exists"})
-    existing_user_email = user_service.find_by_email(signup_input.get("email"))
-    if existing_user_email:
-        raise HTTPException(status_code=409, detail={"message": f"A user with email '{email_input}' already exists"})
+    try:
+        existing_user_username = user_service.find_by_username(username_input)
+        if existing_user_username:
+            raise HTTPException(status_code=409,
+                                detail={"message": f"A user with username '{username_input}' already exists"})
+        existing_user_email = user_service.find_by_email(signup_input.get("email"))
+        if existing_user_email:
+            raise HTTPException(status_code=409,
+                                detail={"message": f"A user with email '{email_input}' already exists"})
 
-    password_hash = hash_password(password_input)
-    buying_power = 100000
-    to_save = User(username=username_input,
-                   email=email_input,
-                   passwordHash=password_hash,
-                   buyingPower=buying_power)
-    doc_id = user_service.save(to_save)
-    access_token = create_access_token(username_input)
-    return ReturnedUserWithToken(_id=str(doc_id),
-                                 username=username_input,
-                                 buying_power=buying_power,
-                                 token=access_token)
+        password_hash = hash_password(password_input)
+        buying_power = 100000
+        to_save = User(username=username_input,
+                       email=email_input,
+                       passwordHash=password_hash,
+                       buyingPower=buying_power)
+        doc_id = user_service.save(to_save)
+        access_token = create_access_token(username_input)
+        return ReturnedUserWithToken(_id=str(doc_id),
+                                     username=username_input,
+                                     buying_power=buying_power,
+                                     token=access_token)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail={"message": "Something went wrong: " + str(e)})
 
 
 @router.get("/get-user/{user_id}", dependencies=[Depends(verify_access_token)])
