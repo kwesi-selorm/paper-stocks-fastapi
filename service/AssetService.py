@@ -53,3 +53,7 @@ class AssetService:
         gain_or_loss = net_proceeds - cost_basis
         remaining_position = old_position - positions_sold
         return {remaining_position, gain_or_loss}
+
+    @staticmethod
+    def find_by_user_id(user_id: str):
+        return assets_collection.find({'userId': user_id})

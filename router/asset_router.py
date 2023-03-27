@@ -1,14 +1,21 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Body
+from pydantic import BaseModel
 from starlette import status
 
 from auth.jwt_fns import verify_access_token
-from helper.symbol_helper import verify_symbol
+from helper.symbol_helper import verify_symbol, get_stock_prices
 from model.AssetModel import BuyAssetInput, Asset
 from router.user_router import ReturnedAsset
 from service.AssetService import AssetService
 from service.UserService import UserService
+
+
+class ReturnedAsset(BaseModel):
+    symbol: str
+    lastPrice: float
+
 
 user_service = UserService()
 asset_service = AssetService()
@@ -55,3 +62,19 @@ async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body
             return ReturnedAsset(symbol=updated_asset.get("symbol"), position=updated_asset.get("position"))
         except Exception as e:
             raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})
+
+
+@router.get("/get-assets/{user_id}", dependencies=[Depends(verify_access_token)])
+async def get_assets(user_id: str):
+    try:
+        user_doc = user_service.find_by_id(user_id)
+        if user_doc is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Registered user not found"})
+
+        asset_docs = asset_service.find_by_user_id(user_id)
+        asset_symbols = [asset.get("symbol") for asset in asset_docs]
+        assets = get_stock_prices(asset_symbols)
+        return assets
+    except Exception as e:
+        raise HTTPException(status_code=500,
+                            detail={"message": "An error was encountered while fetching your assets" + str(e)})
