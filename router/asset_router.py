@@ -1,3 +1,4 @@
+import pprint
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Body
@@ -8,7 +9,6 @@ from starlette import status
 from auth.jwt_fns import verify_access_token
 from helper.symbol_helper import verify_symbol, get_stock_prices
 from model.AssetModel import BuyAssetInput, Asset
-from router.user_router import ReturnedAsset
 from service.AssetService import AssetService
 from service.UserService import UserService
 
@@ -70,12 +70,21 @@ async def get_assets(user_id: str):
     try:
         user_doc = user_service.find_by_id(user_id)
         if user_doc is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"message": "Registered user not found"})
-
+            return JSONResponse(status_code=400, content={"message": "User not found"})
         asset_docs = asset_service.find_by_user_id(user_id)
-        asset_symbols = [asset.get("symbol") for asset in asset_docs]
-        assets = get_stock_prices(asset_symbols)
-        return assets
+        if asset_docs is None:
+            return JSONResponse(status_code=404, content={"message": "No assets found"})
+        assets_to_return = []
+        for asset in asset_docs:
+            asset_dict = {"id": str(asset.get("_id")), "symbol": asset.get("symbol"), "name": asset.get("name"),
+                          "position": asset.get("position"),
+                          "amountInvested": asset.get("amountInvested"),
+                          "averagePrice": asset.get("averagePrice"), "userId": asset.get("userId")}
+            assets_to_return.append(asset_dict)
+        symbols = [asset.get("symbol") for asset in assets_to_return]
+        symbols_str = " ".join(symbols)
+        asset_last_prices = get_stock_prices(symbols_str)
+        return asset_last_prices
     except Exception as e:
         return JSONResponse(status_code=500,
-                            content={"message": "An error was encountered while fetching your assets" + str(e)})
+                            content={"message": "An error was encountered while fetching your assets: " + str(e)})
