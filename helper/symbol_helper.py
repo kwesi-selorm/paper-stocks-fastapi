@@ -15,14 +15,16 @@ def verify_symbol(symbol):
                                                                  "symbol: " + str(e)})
 
 
-def get_stock_prices(symbols: List[str]):
-    last_prices: dict[str, int] = {}
-    for symbol in symbols:
+def get_stock_prices(symbols: str):
+    symbol_list: List[str] = symbols.split(" ")
+    last_prices: List[dict[str, int]] = []
+    for symbol in symbol_list:
         verify_symbol(symbol)
         try:
             ticker = yf.Ticker(symbol)
             last_price = ticker.fast_info["lastPrice"]
-            last_prices[symbol] = last_price
+            last_prices.append({"symbol": symbol.upper(), "lastPrice": last_price})
         except:
             return JSONResponse(status_code=500,
                                 content={"message": f"Something went wrong fetching the market data for {symbol}"})
+    return last_prices
