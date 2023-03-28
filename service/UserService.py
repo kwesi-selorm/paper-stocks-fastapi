@@ -13,22 +13,16 @@ class UserService:
     @staticmethod
     def find_by_id(user_id: str):
         document: Mapping[str, Any] | None = users_collection.find_one({'_id': ObjectId(user_id)})
-        if document is None:
-            raise HTTPException(status_code=404, detail={"message": f"User with id '{user_id}' not found"})
         return document
 
     @staticmethod
     def find_by_email(email: str):
         document: Mapping[str, Any] | None = users_collection.find_one({'email': email})
-        if document is None:
-            raise HTTPException(status_code=404, detail={"message": f"User with email '{email}' found"})
         return document
 
     @staticmethod
     def find_by_username(username: str):
         document: Mapping[str, Any] | None = users_collection.find_one({'username': username})
-        if not document:
-            raise HTTPException(status_code=404, detail={"message": f"User with username '{username}' found"})
         return document
 
     @staticmethod
