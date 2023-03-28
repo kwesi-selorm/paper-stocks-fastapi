@@ -1,12 +1,14 @@
+from bson import ObjectId
 from pydantic import BaseModel, validator
 
 
 class Asset(BaseModel):
-    symbol: str
-    name: str
-    position: int
+    _id: ObjectId
     amountInvested: float
     averagePrice: float
+    name: str
+    position: int
+    symbol: str
     userId: str
 
 
