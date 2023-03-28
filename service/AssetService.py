@@ -1,6 +1,9 @@
+import json
+import pprint
 from typing import Any
 
 from bson import ObjectId
+from pydantic import BaseModel
 from pymongo import ReturnDocument
 
 from config.DatabaseConfig import DatabaseConfig
@@ -56,4 +59,5 @@ class AssetService:
 
     @staticmethod
     def find_by_user_id(user_id: str):
-        return assets_collection.find({'userId': user_id})
+        asset_docs = assets_collection.find({'userId': user_id})
+        return asset_docs
