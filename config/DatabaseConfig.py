@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 
 load_dotenv()
@@ -16,4 +16,4 @@ class DatabaseConfig:
             return database[collection_name]
         except ConnectionError as e:
             print('Failed to connect to MongoDB', str(e))
-            raise HTTPException(status_code=500, detail="Failed to connect to MongoDB")
+            return JSONResponse(status_code=500, content={"message": "Failed to connect to MongoDB"})

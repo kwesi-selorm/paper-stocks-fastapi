@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
@@ -61,7 +62,7 @@ async def buy_asset(user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body
             user_service.update_on_buy(user_id, {"buyingPower": remaining_buying_power})
             return ReturnedAsset(symbol=updated_asset.get("symbol"), position=updated_asset.get("position"))
         except Exception as e:
-            raise HTTPException(status_code=500, detail={"message": "Error completing the transaction" + str(e)})
+            return JSONResponse(status_code=500, content={"message": "Error completing the transaction" + str(e)})
 
 
 @router.get("/get-assets/{user_id}", dependencies=[Depends(verify_access_token)])
@@ -76,5 +77,5 @@ async def get_assets(user_id: str):
         assets = get_stock_prices(asset_symbols)
         return assets
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail={"message": "An error was encountered while fetching your assets" + str(e)})
+        return JSONResponse(status_code=500,
+                            content={"message": "An error was encountered while fetching your assets" + str(e)})

@@ -1,7 +1,7 @@
 from typing import List
 
 import yfinance as yf
-from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 
 
 def verify_symbol(symbol):
@@ -9,10 +9,10 @@ def verify_symbol(symbol):
         ticker = yf.Ticker(symbol)
         print(ticker.fast_info["symbol"])
     except AttributeError:
-        raise HTTPException(status_code=400, detail={"message": f"'{symbol}' is not a valid NASDAQ-listed stock"})
+        return JSONResponse(status_code=400, content={"message": f"'{symbol}' is not a valid NASDAQ-listed stock"})
     except Exception as e:
-        raise HTTPException(status_code=400, detail={"message": f"Something went wrong verifying the requested stock "
-                                                                "symbol: " + str(e)})
+        return JSONResponse(status_code=500, content={"message": f"Something went wrong verifying the requested stock "
+                                                                 "symbol: " + str(e)})
 
 
 def get_stock_prices(symbols: List[str]):
@@ -24,5 +24,5 @@ def get_stock_prices(symbols: List[str]):
             last_price = ticker.fast_info["lastPrice"]
             last_prices[symbol] = last_price
         except:
-            raise HTTPException(status_code=500,
-                                detail={"message": f"Something went wrong fetching the market data for {symbol}"})
+            return JSONResponse(status_code=500,
+                                content={"message": f"Something went wrong fetching the market data for {symbol}"})
