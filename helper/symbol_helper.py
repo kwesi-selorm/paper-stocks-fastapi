@@ -1,7 +1,4 @@
-from types import NoneType
 from typing import List
-
-from fastapi import HTTPException
 
 import yfinance as yf
 from fastapi.responses import JSONResponse
@@ -21,7 +18,7 @@ def verify_symbol(symbol):
             status_code=500,
             content={
                 "message": "Something went wrong verifying the requested stock "
-                "symbol: " + str(e)
+                           "symbol: " + str(e)
             },
         )
 

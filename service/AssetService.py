@@ -1,13 +1,9 @@
-import json
-import pprint
 from typing import Any
 
 from bson import ObjectId
-from pydantic import BaseModel
 from pymongo import ReturnDocument
 
 from config.DatabaseConfig import DatabaseConfig
-
 from model.AssetModel import Asset
 
 assets_collection = DatabaseConfig().get_collection("assets")

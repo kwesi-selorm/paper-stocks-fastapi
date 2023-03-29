@@ -1,17 +1,17 @@
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Depends, Body
+from bson import json_util
+from fastapi import APIRouter, Depends, Body
 from fastapi.responses import JSONResponse
 
 from auth.jwt_fns import create_access_token, verify_access_token
+from helper.password_helper import verify_password, hash_password
 from model.UserModel import SignInUser, SignUpUser, User
 from service.AssetService import AssetService
 from service.UserService import UserService
-from bson import json_util
-from helper.password_helper import verify_password, hash_password
-from util.input_validation import validate_str
 from util.constants import message_prefix
+from util.input_validation import validate_str
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 user_service = UserService()

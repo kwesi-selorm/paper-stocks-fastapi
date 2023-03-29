@@ -1,7 +1,6 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi.responses import JSONResponse
 from pymongo import MongoClient
 
 load_dotenv()

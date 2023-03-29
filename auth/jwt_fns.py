@@ -2,11 +2,10 @@ import os
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import HTTPException, status, Header
-from fastapi.responses import JSONResponse
 import jwt
-from pydantic import BaseModel
 from dotenv import load_dotenv
+from fastapi import HTTPException, status, Header
+from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
 from service.UserService import UserService
