@@ -10,6 +10,8 @@ from service.AssetService import AssetService
 from service.UserService import UserService
 from bson import json_util
 from helper.password_helper import verify_password, hash_password
+from util.input_validation import validate_str
+from util.constants import message_prefix
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 user_service = UserService()
@@ -32,16 +34,8 @@ class ReturnedUserWithToken(ReturnedUser):
 @router.post("/signin")
 async def signin(credentials: Annotated[SignInUser, Body(required=True)]):
     signin_input = credentials.dict()
-    username_input = signin_input.get("username")
-    if username_input is None:
-        return JSONResponse(
-            status_code=400, content={"message": "Username is required"}
-        )
-    password_input = signin_input.get("password")
-    if password_input is None:
-        return JSONResponse(
-            status_code=400, content={"message": "Password is required"}
-        )
+    username_input = validate_str(signin_input.get("username"))
+    password_input = validate_str(signin_input.get("password"))
 
     try:
         user_doc = user_service.find_by_username(username_input)
@@ -126,7 +120,7 @@ async def signup(credentials: Annotated[SignUpUser, Body(required=True)]):
         )
     except Exception as e:
         return JSONResponse(
-            status_code=500, content={"message": "Something went wrong: " + str(e)}
+            status_code=500, content={"message": message_prefix + str(e)}
         )
 
 
@@ -146,5 +140,5 @@ async def get_user(user_id: str):
 
     except Exception as e:
         return JSONResponse(
-            status_code=500, content={"message": "Something went wrong: " + str(e)}
+            status_code=500, content={"message": message_prefix + str(e)}
         )
