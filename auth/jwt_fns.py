@@ -1,11 +1,13 @@
 import os
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import HTTPException, status, Header
+from fastapi.responses import JSONResponse
 import jwt
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from starlette.responses import JSONResponse
 
 from service.UserService import UserService
 
@@ -27,7 +29,7 @@ class Payload(BaseModel):
     username: str
 
 
-def create_access_token(username: str) -> str:
+def create_access_token(username: str) -> JSONResponse | Any:
     try:
         payload = {
             "sub": username,
@@ -36,18 +38,19 @@ def create_access_token(username: str) -> str:
         encoded_jwt = jwt.encode(payload, SECRET, ALGORITHM)
         return encoded_jwt
     except Exception as e:
-        raise HTTPException(
+
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"message": "Error generating access token: " + str(e)}
+            content={"message": "Error generating access token: " + str(e)},
         )
 
 
-def verify_access_token(authorization: Annotated[str | None, Header()]) -> None:
+def verify_access_token(authorization: Annotated[str | None, Header()]) -> JSONResponse:
     token = authorization[7:] if authorization else None
     if token is None:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": "No access token provided"},
+            content={"message": "No access token provided"},
         )
     try:
         payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
@@ -56,7 +59,10 @@ def verify_access_token(authorization: Annotated[str | None, Header()]) -> None:
             raise credentials_exception
         user_doc = user_service.find_by_username(username)
         if user_doc is None:
-            raise HTTPException(status_code=403, detail={"message": "No registered user found"})
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"message": "No registered user found"},
+            )
     except jwt.ExpiredSignatureError:
         raise credentials_exception
     except jwt.InvalidTokenError:
