@@ -37,7 +37,8 @@ def create_access_token(username: str):
         }
         if SECRET is None:
             raise HTTPException(
-                status_code=500, detail={"message": "JWT_SECRET not set"}
+                status_code=500,
+                detail={"message": "Error creating access token: JWT_SECRET not set"},
             )
         encoded_jwt: str = jwt.encode(payload, SECRET, ALGORITHM)
         return encoded_jwt
