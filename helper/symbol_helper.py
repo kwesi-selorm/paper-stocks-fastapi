@@ -1,7 +1,15 @@
+from enum import Enum
 from typing import List
 
 import yfinance as yf
 from fastapi.responses import JSONResponse
+
+
+class MarketState(Enum):
+    PRE = "PRE"
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
+    POST = "POST"
 
 
 def verify_symbol(symbol):
@@ -18,7 +26,7 @@ def verify_symbol(symbol):
             status_code=500,
             content={
                 "message": "Something went wrong verifying the requested stock "
-                           "symbol: " + str(e)
+                "symbol: " + str(e)
             },
         )
 
@@ -50,5 +58,5 @@ def fetch_market_state(symbol: str):
     data = yf.Ticker(symbol)
     market_state = data.info["marketState"]
     if market_state is None:
-        return "CLOSED"
-    return market_state
+        return MarketState.CLOSED
+    return MarketState[market_state]
