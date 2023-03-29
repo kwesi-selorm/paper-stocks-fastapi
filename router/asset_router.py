@@ -11,7 +11,7 @@ from helper.symbol_helper import verify_symbol, get_stock_prices
 from model.AssetModel import BuyAssetInput, Asset
 from service.AssetService import AssetService
 from service.UserService import UserService
-from util.input_verification import verify_int, verify_str
+from util.input_validation import verify_int, verify_str
 
 
 class ReturnedAsset(BaseModel):

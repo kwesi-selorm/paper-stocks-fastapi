@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from router import user_router, asset_router
+from router import user_router, asset_router, stock_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -10,11 +10,12 @@ app.add_middleware(
     allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 app.include_router(user_router.router)
 app.include_router(asset_router.router)
+app.include_router(stock_router.router)
 
 
 @app.get("/")
