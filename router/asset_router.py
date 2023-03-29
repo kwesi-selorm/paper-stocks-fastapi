@@ -1,4 +1,3 @@
-import pprint
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Body
@@ -11,7 +10,7 @@ from helper.symbol_helper import verify_symbol, get_stock_prices
 from model.AssetModel import BuyAssetInput, Asset
 from service.AssetService import AssetService
 from service.UserService import UserService
-from util.input_validation import verify_int, verify_str
+from util.input_validation import validate_int, validate_str
 
 
 class ReturnedAsset(BaseModel):
@@ -31,12 +30,12 @@ router = APIRouter(prefix="/api/assets", tags=["assets"])
     status_code=status.HTTP_201_CREATED,
 )
 async def buy_asset(
-    user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body(required=True)]
+        user_id: str, buy_asset_input: Annotated[BuyAssetInput, Body(required=True)]
 ):
-    symbol = verify_str(buy_asset_input.dict().get("symbol"))
-    name = verify_str(buy_asset_input.dict().get("name"))
-    new_position = verify_int(buy_asset_input.dict().get("position"))
-    new_amount_invested = verify_int(buy_asset_input.dict().get("amountInvested"))
+    symbol = validate_str(buy_asset_input.dict().get("symbol"))
+    name = validate_str(buy_asset_input.dict().get("name"))
+    new_position = validate_int(buy_asset_input.dict().get("position"))
+    new_amount_invested = validate_int(buy_asset_input.dict().get("amountInvested"))
 
     try:
         user_doc = user_service.find_by_id(user_id)
@@ -119,6 +118,6 @@ async def get_assets(user_id: str):
             status_code=500,
             content={
                 "message": "An error was encountered while fetching your assets: "
-                + str(e)
+                           + str(e)
             },
         )
